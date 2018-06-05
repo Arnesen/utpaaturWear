@@ -1,7 +1,6 @@
 package nrk.no.monsenpatur
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.Sensor
@@ -13,19 +12,10 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.wearable.activity.WearableActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import java.text.SimpleDateFormat
-import java.util.*
 
 
 class MainActivity : WearableActivity(), SensorEventListener {
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-    }
-
-    @SuppressLint("SimpleDateFormat")
-    private fun currentTimeStr(): String {
-        val c = Calendar.getInstance()
-        val df = SimpleDateFormat("HH:mm:ss")
-        return df.format(c.time)
     }
 
 
