@@ -12,9 +12,21 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.wearable.activity.WearableActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.*
+import kotlin.concurrent.fixedRateTimer
 
 
 class MainActivity : WearableActivity(), SensorEventListener {
+
+
+    var client = OkHttpClient()
+
+
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
     }
 
@@ -24,6 +36,7 @@ class MainActivity : WearableActivity(), SensorEventListener {
             event.sensor.type == Sensor.TYPE_HEART_RATE -> {
                 val msg = "" + event.values[0].toInt()
                 heartrate.text = msg
+
             }
             event.sensor.type == Sensor.TYPE_STEP_COUNTER -> {
                 val msg = "" + event.values[0].toInt()
@@ -61,13 +74,22 @@ class MainActivity : WearableActivity(), SensorEventListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        fixedRateTimer(startAt = Date(), period = 10000, action = {
+            val request = Request.Builder()
+                    .url("http://139.162.215.106:3000/log?pulse=" + heartrate.text + "&steps=" + steps.text)
+                    .build()
+            async(CommonPool) {
+                client.newCall(request).execute()
+            }
+
+        })
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS)
                 != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this,
                     arrayOf(Manifest.permission.BODY_SENSORS),
                     50)
-        }else{
+        } else {
             setupSensors()
         }
 
