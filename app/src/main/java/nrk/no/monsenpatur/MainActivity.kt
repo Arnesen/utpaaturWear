@@ -65,7 +65,7 @@ class MainActivity : WearableActivity(), SensorEventListener {
                 != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.BODY_SENSORS),
+                    arrayOf(Manifest.permission.BODY_SENSORS, Manifest.permission.ACCESS_FINE_LOCATION),
                     50)
         }else{
             setupSensors()
