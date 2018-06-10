@@ -7,14 +7,15 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.wearable.activity.WearableActivity
+import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.*
@@ -26,9 +27,14 @@ class MainActivity : WearableActivity(), SensorEventListener {
 
     var client = OkHttpClient()
 
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
     }
+
+    private fun hasGps(): Boolean =
+            packageManager.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS)
 
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -107,6 +113,12 @@ class MainActivity : WearableActivity(), SensorEventListener {
         mSensorManager.registerListener(this, mHeartRateSensor, SensorManager.SENSOR_DELAY_NORMAL)
         mSensorManager.registerListener(this, mStepCountSensor, SensorManager.SENSOR_DELAY_FASTEST)
         mSensorManager.registerListener(this, mStepDetectSensor, SensorManager.SENSOR_DELAY_NORMAL)
+
+
+        fusedLocationClient.lastLocation
+                .addOnSuccessListener { location : Location? ->
+                    // Got last known location. In some rare situations this can be null.
+                }
     }
 
 }
