@@ -7,12 +7,11 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.location.Location
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.wearable.activity.WearableActivity
-import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
@@ -28,6 +27,12 @@ class MainActivity : WearableActivity(), SensorEventListener {
     var client = OkHttpClient()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+
+    private var lat: Double? = null
+    private var long: Double? = null
+
+    private  var locationCallback: LocationCallback? = null
 
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
@@ -47,6 +52,9 @@ class MainActivity : WearableActivity(), SensorEventListener {
             event.sensor.type == Sensor.TYPE_STEP_COUNTER -> {
                 val msg = "" + event.values[0].toInt()
                 steps.text = msg
+            }
+            event.sensor.type == Sensor.TYPE_STEP_DETECTOR -> {
+                // do something when we detect a step
             }
         }
     }
@@ -80,9 +88,23 @@ class MainActivity : WearableActivity(), SensorEventListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        fixedRateTimer(startAt = Date(), period = 10000, action = {
+        fixedRateTimer(startAt = Date(), period = 5000, action = {
+
+            var url = "http://137.117.158.207/log?pulse=" + heartrate.text
+
+            if (steps.text.isNotEmpty()) {
+                url = "$url&steps=${steps.text}"
+            }
+
+            if (lat != null) {
+                url = "$url&lat=$lat"
+            }
+            if (long != null) {
+                url = "$url&lng=$long"
+            }
+
             val request = Request.Builder()
-                    .url("http://139.162.215.106:3000/log?pulse=" + heartrate.text + "&steps=" + steps.text)
+                    .url(url)
                     .build()
             async(CommonPool) {
                 client.newCall(request).execute()
@@ -111,14 +133,38 @@ class MainActivity : WearableActivity(), SensorEventListener {
         val mStepDetectSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
 
         mSensorManager.registerListener(this, mHeartRateSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        mSensorManager.registerListener(this, mStepCountSensor, SensorManager.SENSOR_DELAY_FASTEST)
+        mSensorManager.registerListener(this, mStepCountSensor, SensorManager.SENSOR_DELAY_NORMAL)
         mSensorManager.registerListener(this, mStepDetectSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED && hasGps()) {
 
+//            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+//                lat = location?.latitude
+//                long = location?.longitude
+//                locationText.text = "$lat : $long"
+//            }
+            locationCallback = object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult?) {
+                    locationResult ?: return
+                    for (location in locationResult.locations) {
+                        // Update UI with location data
+                        // ...
 
-        fusedLocationClient.lastLocation
-                .addOnSuccessListener { location : Location? ->
-                    // Got last known location. In some rare situations this can be null.
+                        lat = location?.latitude
+                        long = location?.longitude
+                        locationText.text = "$lat : $long"
+                    }
                 }
+            }
+            fusedLocationClient.requestLocationUpdates(LocationRequest(),
+                    locationCallback,
+                    null /* Looper */)
+        }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
 }

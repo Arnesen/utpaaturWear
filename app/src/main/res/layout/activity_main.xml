@@ -53,8 +53,20 @@
             app:layout_anchor="@+id/steps_label"
             app:layout_constraintStart_toEndOf="@+id/steps_label"
             app:layout_constraintTop_toBottomOf="@id/heartrate"
-            tools:text="5 steg siste 30 sek" />
-
+            tools:text="Steps" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:id="@+id/location_label"
+            android:layout_marginTop="8dp"
+            android:text="Posisjon:"
+            app:layout_constraintTop_toBottomOf="@id/steps"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:id="@+id/locationText"
+            tools:text="dsadasd213123123"
+            app:layout_constraintTop_toBottomOf="@id/location_label"
+            android:layout_height="wrap_content" />
 
     </android.support.constraint.ConstraintLayout>
 </android.support.wear.widget.BoxInsetLayout>
